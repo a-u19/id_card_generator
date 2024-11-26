@@ -1,19 +1,19 @@
 import pandas as pd
-from PIL import Image, ImageDraw, ImageFont
-import cv2
-import numpy as np
 import cv2
 import pytesseract
-from matplotlib import pyplot as plt
 from thefuzz import fuzz
 
-def open_file(file_name:str):
+
+def open_file(file_name: str):
     return open(file_name)
 
-def open_excel(excel_file_name:str):
+
+def open_excel(excel_file_name: str):
     return pd.read_excel(excel_file_name, header=0)
 
-def replace(img_filepath:str, pfp_filepath:str, teacher_first_name:str, teacher_last_name:str, teacher_num:str, dbs_num:int) -> None:
+
+def replace(img_filepath: str, teacher_first_name: str, teacher_last_name: str, teacher_num: str, dbs_num: int,
+            pfp_filepath: str = "", students:bool = False) -> None:
     # Load the image
     img = cv2.imread(img_filepath)
     pfp = cv2.imread(pfp_filepath)
@@ -97,11 +97,14 @@ def replace(img_filepath:str, pfp_filepath:str, teacher_first_name:str, teacher_
     cv2.imwrite(output_filepath, annotated_img)
 
 
-def main():
+def main_teachers():
     teacher_details = open_excel("../teacher_id_card_files/teacher_details.xlsx")
     for teacher in teacher_details.iterrows():
         full_name = f"{teacher[1].get('First Name')}_{teacher[1].get('Last Name')}"
-        replace('template_id.png', f'../teacher_id_card_files/{full_name}.jpg', teacher[1].get('First'
-        ' Name'), teacher[1].get('Last Name'), teacher[1].get('Teacher Number'), teacher[1].get('DBS Number'))
+        replace('template_id.png', teacher[1].get('First'
+                                                  ' Name'), teacher[1].get('Last Name'),
+                teacher[1].get('Teacher Number'), teacher[1].get('DBS Number'),
+                f'../teacher_id_card_files/{full_name}.jpg')
 
-main()
+
+main_teachers()
