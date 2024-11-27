@@ -46,9 +46,10 @@ def collate_images(image_files, image_folder, output_file, image_size, margin, g
         if y + image_size[1] + gap > a4_height:
             break
 
+    output_file = f"{output_file}_{iteration_num}.png"
     # Save the resulting image
     canvas.save(output_file, quality=95, optimize=True)
-    print(f"Collated image saved to {output_file}_{iteration_num}.png")
+    print(f"Collated image saved to {output_file}")
 
 def main(margin:int, gap:int, image_folder:str, a4_width:int = 4960, a4_height:int = 7016):
 
@@ -57,12 +58,13 @@ def main(margin:int, gap:int, image_folder:str, a4_width:int = 4960, a4_height:i
 
     max_pics_per_row  = (a4_width - 2 * margin + gap) // (image_size[0] + gap)
     max_pics_per_col  = (a4_height - 2 * margin + gap) // (image_size[1] + gap)
+    # print(max_pics_per_col,max_pics_per_row)
 
     total_num_pics = len(image_files)
 
     max_pics_per_page = max_pics_per_col * max_pics_per_row
 
-    iterations = total_num_pics//max_pics_per_page
+    iterations = total_num_pics//max_pics_per_page + 1
 
     for iteration in range(iterations):
         selected_images = image_files[iteration * max_pics_per_page : (iterations + 1) * max_pics_per_page]
@@ -73,8 +75,8 @@ def main(margin:int, gap:int, image_folder:str, a4_width:int = 4960, a4_height:i
             image_size=image_size,
             margin=50,
             gap=20,
-            a4_size=tuple(a4_width, a4_height),
+            a4_size=tuple((a4_width, a4_height)),
             iteration_num=iteration)
-
+        print(f"Pictures {iteration * max_pics_per_page} to {(iterations + 1) * max_pics_per_page} collated")
 
 main(50, 20, '../teacher_id_card_files/to_be_printed/')
