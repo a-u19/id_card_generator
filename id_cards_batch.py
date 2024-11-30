@@ -17,6 +17,19 @@ def replace(img_filepath: str, teacher_first_name: str, teacher_last_name: str, 
     # Load the image
     img = cv2.imread(img_filepath)
     pfp = cv2.imread(pfp_filepath)
+    resources = [img, teacher_first_name, teacher_last_name, teacher_num, dbs_num, pfp]
+    for resource in resources:
+        if resource is None:
+            print("Teacher details are as follows: "
+                  f"\nimg:{img is None} \n"
+                  f"teacher_first_name:{teacher_first_name} \n"
+                  f"teacher_last_name:{teacher_last_name} \n"
+                  f"teacher_num:{teacher_num} \n"
+                  f"dbs_num:{dbs_num} \n"
+                  f"pfp:{pfp is None}")
+            return
+    # cv2.imshow("hi", pfp)
+    # cv2.waitKey(0)
 
     # Convert to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -42,14 +55,14 @@ def replace(img_filepath: str, teacher_first_name: str, teacher_last_name: str, 
         x, y, w, h = cv2.boundingRect(c)
 
         # Filter for rectangular regions that are significant
+        # print(w, h)
 
-        if w > 300 and 100 < h < w:
+        if w>=500 and h >=200:
             # Draw rectangles on the original image for visualization
 
             # Extract the ROI for OCR
             roi = gray[y:y + h, x:x + w]
             roi = cv2.adaptiveThreshold(roi, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-            # plt.imshow(roi, cmap='gray')
             text = pytesseract.image_to_string(roi, lang='eng', config='--psm 11').strip()
 
             # Prepare replacement text based on OCR detection
@@ -60,21 +73,26 @@ def replace(img_filepath: str, teacher_first_name: str, teacher_last_name: str, 
                 replacement_text = str(teacher_num)
             elif fuzz.partial_ratio("dbs number", text.lower()) > 90:
                 replacement_text = str(dbs_num)
+            elif fuzz.partial_ratio("picture", text.lower()) > 90:
+                replacement_text = "PICTURE"
 
-            print(replacement_text)
+            # print(replacement_text)
 
-            if replacement_text:
-                # Draw a filled dark blue rectangle (RGB: (0, 0, 128)) to replace the placeholder
-                cv2.rectangle(annotated_img, (x, y), (x + w, y + h), (128, 0, 0), -1)
+            if replacement_text != "PICTURE":
+                # Draw the outline rectangle first
+                cv2.rectangle(annotated_img, (x, y), (x + w, y + h), (241, 211, 119), thickness=5)
+
+                # Draw the filled rectangle, leaving space for the outline
+                cv2.rectangle(annotated_img, (x + 2, y + 2), (x + w - 2, y + h - 2), (255, 255, 255), thickness=-1)
 
                 # Calculate text size to center it
-                text_size = cv2.getTextSize(replacement_text, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)[0]
+                text_size = cv2.getTextSize(replacement_text, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 2)[0]
                 text_x = x + (w - text_size[0]) // 2
                 text_y = y + (h + text_size[1]) // 2
 
                 # Draw the replacement text in white
                 cv2.putText(annotated_img, replacement_text, (text_x, text_y),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                            cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 0), 2)
 
             else:
                 resized_pfp = cv2.resize(pfp, (w, h))
@@ -93,16 +111,17 @@ def replace(img_filepath: str, teacher_first_name: str, teacher_last_name: str, 
     # plt.show()
 
     # write images back to folder
-    output_filepath = pfp_filepath.replace("jpg", "").lower() + "id_card_output_v2.png"
+    output_filepath = pfp_filepath.replace("jpg", "").lower() + "id_card_output.png"
     cv2.imwrite(output_filepath, annotated_img)
 
 
 def main_teachers():
     teacher_details = open_excel("../teacher_id_card_files/teacher_details.xlsx")
     for teacher in teacher_details.iterrows():
-        full_name = f"{teacher[1].get('First Name')}_{teacher[1].get('Last Name')}"
+        full_name = f"{teacher[1].get('First Name').lower()}_{teacher[1].get('Last Name').lower()}"
+        # print(f'../teacher_id_card_files/{full_name}.jpg')
         replace('template_id.png', teacher[1].get('First'
-                                                  ' Name'), teacher[1].get('Last Name'),
+                                                  ' Name').title(), teacher[1].get('Last Name').title(),
                 teacher[1].get('Teacher Number'), teacher[1].get('DBS Number'),
                 f'../teacher_id_card_files/{full_name}.jpg')
 
