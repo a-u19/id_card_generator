@@ -20,7 +20,7 @@ def replace(img_filepath: str, teacher_first_name: str, teacher_last_name: str, 
     resources = [img, teacher_first_name, teacher_last_name, teacher_num, dbs_num, pfp]
     for resource in resources:
         if resource is None:
-            print("Teacher details are as follows: "
+            print("Missing teacher details are as follows: "
                   f"\nimg:{img is None} \n"
                   f"teacher_first_name:{teacher_first_name} \n"
                   f"teacher_last_name:{teacher_last_name} \n"
@@ -55,15 +55,15 @@ def replace(img_filepath: str, teacher_first_name: str, teacher_last_name: str, 
         x, y, w, h = cv2.boundingRect(c)
 
         # Filter for rectangular regions that are significant
-        # print(w, h)
-
-        if w>=500 and h >=200:
+        if w>=500:
             # Draw rectangles on the original image for visualization
 
             # Extract the ROI for OCR
             roi = gray[y:y + h, x:x + w]
             roi = cv2.adaptiveThreshold(roi, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
             text = pytesseract.image_to_string(roi, lang='eng', config='--psm 11').strip()
+
+            # print(text)
 
             # Prepare replacement text based on OCR detection
             replacement_text = ""
@@ -79,12 +79,11 @@ def replace(img_filepath: str, teacher_first_name: str, teacher_last_name: str, 
             # print(replacement_text)
 
             if replacement_text != "PICTURE":
-                # Draw the outline rectangle first
-                cv2.rectangle(annotated_img, (x, y), (x + w, y + h), (241, 211, 119), thickness=5)
 
                 # Draw the filled rectangle, leaving space for the outline
                 cv2.rectangle(annotated_img, (x + 2, y + 2), (x + w - 2, y + h - 2), (255, 255, 255), thickness=-1)
-
+                # Draw the outline rectangle first
+                cv2.rectangle(annotated_img, (x, y), (x + w, y + h), (241, 211, 119), thickness=3)
                 # Calculate text size to center it
                 text_size = cv2.getTextSize(replacement_text, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 2)[0]
                 text_x = x + (w - text_size[0]) // 2
@@ -109,7 +108,7 @@ def replace(img_filepath: str, teacher_first_name: str, teacher_last_name: str, 
     # plt.imshow(cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB))
     # plt.axis('off')
     # plt.show()
-
+    print(f"Outputting {pfp_filepath}")
     # write images back to folder
     output_filepath = pfp_filepath.replace("jpg", "").lower() + "id_card_output.png"
     cv2.imwrite(output_filepath, annotated_img)
