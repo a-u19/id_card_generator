@@ -48,7 +48,7 @@ def replace(img_filepath: str, teacher_first_name: str, teacher_last_name: str, 
     annotated_img = img.copy()
 
     # Initialize pytesseract for text extraction
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 
     # Iterate through contours and process rectangles
     for c in contours:
@@ -119,7 +119,7 @@ def main_teachers():
     for teacher in teacher_details.iterrows():
         full_name = f"{teacher[1].get('First Name').lower()}_{teacher[1].get('Last Name').lower()}"
         # print(f'../teacher_id_card_files/{full_name}.jpg')
-        replace('template_id.png', teacher[1].get('First'
+        replace('teacher_template_id_v2.png', teacher[1].get('First'
                                                   ' Name').title(), teacher[1].get('Last Name').title(),
                 teacher[1].get('Teacher Number'), teacher[1].get('DBS Number'),
                 f'../teacher_id_card_files/{full_name}.jpg')
