@@ -1,6 +1,9 @@
 from PIL import Image
 import os
 
+from numpy.core.defchararray import endswith
+
+
 def collate_images(image_files, image_folder, output_file, image_size, margin, gap, a4_size, iteration_num):
     """
     Collates images into a single file for printing on A4 paper with gaps.
@@ -64,7 +67,7 @@ def images_to_pdf(image_folder, output_pdf):
     image_files = [
         os.path.join(image_folder, f)
         for f in os.listdir(image_folder)
-        if f.lower()[:8] == 'collated'
+        if "collated" in f
     ]
 
     if not image_files:
@@ -93,7 +96,7 @@ def images_to_pdf(image_folder, output_pdf):
 
 def main(margin:int, gap:int, image_folder:str, a4_width:int = 4960, a4_height:int = 7016):
 
-    image_files = [f for f in os.listdir(image_folder) if f.lower().endswith(('png', 'jpg', 'jpeg'))]
+    image_files = [f for f in os.listdir(image_folder) if f.lower()[-10:] == 'output.png']
     if len(image_files) == 0:
         exit("No image files found")
     image_size = Image.open(image_folder + image_files[0]).size
@@ -111,7 +114,7 @@ def main(margin:int, gap:int, image_folder:str, a4_width:int = 4960, a4_height:i
         selected_images = image_files[iteration * max_pics_per_page : (iterations + 1) * max_pics_per_page]
         collate_images(
             image_files=selected_images,
-            image_folder='../teacher_id_card_files/to_be_printed/',
+            image_folder='../teacher_id_card_files/teacher_images/',
             output_file="../teacher_id_card_files/to_be_printed/collated",
             image_size=image_size,
             margin=50,
@@ -119,7 +122,7 @@ def main(margin:int, gap:int, image_folder:str, a4_width:int = 4960, a4_height:i
             a4_size=tuple((a4_width, a4_height)),
             iteration_num=iteration)
         print(f"Pictures {iteration * max_pics_per_page} to {(iterations + 1) * max_pics_per_page} collated")
-        images_to_pdf("../teacher_id_card_files/to_be_printed/", "..\\teacher_id_card_files\\to_be_printed\output.pdf")
+        images_to_pdf("../teacher_id_card_files/to_be_printed", "..\\teacher_id_card_files\\to_be_printed\\output.pdf")
 
 
-main(50, 20, '../teacher_id_card_files/to_be_printed/')
+main(50, 20, '../teacher_id_card_files/teacher_images/')
