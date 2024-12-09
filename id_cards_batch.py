@@ -13,7 +13,7 @@ def open_excel(excel_file_name: str):
 
 
 def replace(img_filepath: str, teacher_first_name: str, teacher_last_name: str, teacher_num: str, dbs_num: int,
-            pfp_filepath: str) -> None:
+            teaching_staff: bool, pfp_filepath: str, students: bool) -> None:
     # Load the image
     img = cv2.imread(img_filepath)
     pfp = cv2.imread(pfp_filepath)
@@ -26,7 +26,8 @@ def replace(img_filepath: str, teacher_first_name: str, teacher_last_name: str, 
                   f"teacher_last_name:{teacher_last_name} \n"
                   f"teacher_num:{teacher_num} \n"
                   f"dbs_num:{dbs_num} \n"
-                  f"pfp:{pfp is not None}")
+                  f"pfp:{pfp is not None}"
+                  f"teaching staff bool:{teaching_staff is not None}")
             return
     # cv2.imshow("hi", pfp)
     # cv2.waitKey(0)
@@ -77,6 +78,8 @@ def replace(img_filepath: str, teacher_first_name: str, teacher_last_name: str, 
                 replacement_text = f"DBS Number: {dbs_num}"
             elif fuzz.partial_ratio("picture", text.lower()) > 90:
                 replacement_text = "PICTURE"
+            elif fuzz.partial_ratio("teaching staff", text.lower()) > 90:
+                replacement_text = "TEACHING STAFF" if teaching_staff else "ADMIN STAFF"
 
             # print(replacement_text)
 
@@ -103,12 +106,6 @@ def replace(img_filepath: str, teacher_first_name: str, teacher_last_name: str, 
                 else:
                     print(f"Error: Couldn't resize the profile picture to fit {w}x{h}.")
 
-    # # Display the annotated image
-    # plt.figure(figsize=(10, 10))
-    # plt.imshow(cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB))
-    # plt.axis('off')
-    # plt.show()
-    # write images back to folder
     output_filepath = pfp_filepath.replace("jpg", "").lower() + "id_card_output.png"
     cv2.imwrite(output_filepath, annotated_img)
     print(f"Outputting {output_filepath}")
@@ -121,7 +118,7 @@ def main_teachers():
         # print(f'../teacher_id_card_files/{full_name}.jpg')
         replace('teacher_template_id_v3.png', teacher[1].get('First'
                                                   ' Name').title(), teacher[1].get('Last Name').title(),
-                teacher[1].get('Teacher Number'), teacher[1].get('DBS Number'),
+                teacher[1].get('Teacher Number'), teacher[1].get('DBS Number'), teacher[1].get('Teaching Staff'),
                 f'../teacher_id_card_files/teacher_images/{full_name}.jpg')
 
 

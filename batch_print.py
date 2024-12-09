@@ -1,7 +1,5 @@
-from PIL import Image
+from PIL import Image, ImageOps
 import os
-
-from numpy.core.defchararray import endswith
 
 
 def collate_images(image_files, image_folder, output_file, image_size, margin, gap, a4_size, iteration_num):
@@ -51,13 +49,23 @@ def collate_images(image_files, image_folder, output_file, image_size, margin, g
 
     output_file = f"{output_file}_{iteration_num}.png"
     # Save the resulting image
-    canvas.save(output_file, quality=95, optimize=True)
+    canvas.save(output_file, quality=100, optimize=True)
     print(f"Collated image saved to {output_file}")
 
 
 
-def images_to_pdf(image_folder, output_pdf):
+from PIL import Image, ImageOps
+import os
 
+def images_to_pdf(image_folder, output_pdf, a4_size=(4960, 7016), dpi=600):
+    """
+    Creates a PDF from images, ensuring proper A4 size and DPI for printing.
+
+    :param image_folder: Path to the folder containing images
+    :param output_pdf: Path to save the output PDF
+    :param a4_size: Tuple (width, height) representing A4 size in pixels
+    :param dpi: DPI (dots per inch) for the PDF output
+    """
     # Ensure the output directory exists
     output_dir = os.path.dirname(output_pdf)
     if output_dir and not os.path.exists(output_dir):
@@ -77,20 +85,30 @@ def images_to_pdf(image_folder, output_pdf):
     # Sort files to maintain order
     image_files.sort()
 
-    # Open the images and prepare for PDF creation
+    # Open the images and resize them to A4 if necessary
     image_list = []
     for file in image_files:
         img = Image.open(file)
         img = img.convert("RGB")  # Convert to RGB for PDF compatibility
+
+        # Resize or pad to match A4 size
+        if img.size != a4_size:
+            img = ImageOps.pad(img, a4_size, color="white")  # Adds white padding if needed
+
         image_list.append(img)
 
-    # Save images as a single PDF
-    image_list[0].save(
-        output_pdf,
-        save_all=True,
-        append_images=image_list[1:]
-    )
-    print(f"PDF created successfully: {output_pdf}")
+    # Save images as a single PDF with DPI
+    if image_list:
+        image_list[0].save(
+            output_pdf,
+            save_all=True,
+            append_images=image_list[1:],
+            quality=100,
+            resolution=dpi  # Embed the DPI
+        )
+        print(f"PDF created successfully: {output_pdf}")
+    else:
+        print("No valid images were found to create the PDF.")
 
 
 
@@ -101,14 +119,14 @@ def main(margin:int, gap:int, image_folder:str, a4_width:int = 4960, a4_height:i
         exit("No image files found")
     image_size = Image.open(image_folder + image_files[0]).size
 
-    max_pics_per_row  = (a4_width - 2 * margin + gap) // (image_size[0] + gap)
-    max_pics_per_col  = (a4_height - 2 * margin + gap) // (image_size[1] + gap)
+    max_pics_per_row  = (a4_width - (2 * margin + gap)) // (image_size[0] + gap)
+    max_pics_per_col  = (a4_height - (2 * margin + gap)) // (image_size[1] + gap)
 
     total_num_pics = len(image_files)
 
     max_pics_per_page = max_pics_per_col * max_pics_per_row
 
-    iterations = total_num_pics//max_pics_per_page + 1
+    iterations = (total_num_pics + max_pics_per_page - 1) // max_pics_per_page
 
     for iteration in range(iterations):
         selected_images = image_files[iteration * max_pics_per_page : (iterations + 1) * max_pics_per_page]
@@ -117,12 +135,12 @@ def main(margin:int, gap:int, image_folder:str, a4_width:int = 4960, a4_height:i
             image_folder='../teacher_id_card_files/teacher_images/',
             output_file="../teacher_id_card_files/to_be_printed/collated",
             image_size=image_size,
-            margin=50,
-            gap=20,
+            margin=margin,
+            gap=gap,
             a4_size=tuple((a4_width, a4_height)),
             iteration_num=iteration)
-        print(f"Pictures {iteration * max_pics_per_page} to {(iterations + 1) * max_pics_per_page} collated")
-        images_to_pdf("../teacher_id_card_files/to_be_printed", "..\\teacher_id_card_files\\to_be_printed\\output.pdf")
+        print(f"Pictures {iteration * max_pics_per_page} to {(iteration + 1) * max_pics_per_page} collated")
+        images_to_pdf("../teacher_id_card_files/to_be_printed", "../teacher_id_card_files/to_be_printed/output.pdf")
 
 
-main(50, 20, '../teacher_id_card_files/teacher_images/')
+main(100, 100, '../teacher_id_card_files/teacher_images/')
